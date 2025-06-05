@@ -22,8 +22,14 @@
  * - ENABLE - GPIO19
  * 
  * OLED Display 0.96" SPI (SSD1306 controller):
- * - MOSI   - GPIO23
- * - MISO   - GPIO19 (if needed, usually not)
+ * - MOSI   - GPIO13 //cambiar 
+ * void setup() {
+  SPI.begin(OLED_CLK, -1, OLED_MOSI, OLED_CS);  // -1 porque no usamos MISO
+  display.begin(SSD1306_SWITCHCAPVCC);
+  display.display();
+  } 
+ * 
+ * - MISO   - GPIO19 
  * - SCK    - GPIO18
  * - CS     - GPIO5
  * - DC     - GPIO17
