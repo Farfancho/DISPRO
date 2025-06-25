@@ -28,11 +28,11 @@ State state = MOVING_PLATE;
 
 //Tower
 #define DirTower 26
-#define StepTower 27
+#define stepTower 27
 
 //Plate
 #define DirPlate 13
-#define StepPlate 14
+#define stepPlate 14
 
 int Delay = 700;
 int stepsPlate = 0;
@@ -94,8 +94,8 @@ void setup() {
 
   pinMode(DirTower, OUTPUT);
   pinMode(DirPlate, OUTPUT);
-  pinMode(StepTower, OUTPUT);
-  pinMode(StepPlate, OUTPUT);
+  pinMode(stepTower, OUTPUT);
+  pinMode(stepPlate, OUTPUT);
 
   if (!display.begin(SSD1306_SWITCHCAPVCC)) {
     Serial.println(F("Error al inicializar el display OLED"));
@@ -161,6 +161,8 @@ void moveMotors(){
       }
       break;
   }
+
+
 }
 
 float senseDistance() {
@@ -168,12 +170,13 @@ float senseDistance() {
   float voltage = data * (3.3 / 4095.0);
   float distance = 27.86 * pow(voltage, -1.15);
 
-  // Limita los valores de distancia para no tener puntos en sitios que no correspondan
+  // Limitar los valores de distancia a un rango razonable
   if (distance > 30.0) {
     distance = 31.0; //debug
   } else if (distance < 7.0) {
     distance = 1.0; //debug
   }
+
   return distance;
 }
 
