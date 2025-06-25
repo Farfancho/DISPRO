@@ -3,6 +3,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+enum State { MOVING_PLATE, MOVING_TOWER };
+State state = MOVING_PLATE;
+
 //Display
 #define OLED_MOSI  23
 #define OLED_CLK   18
@@ -18,10 +21,10 @@
 #define STOPHIGH 32
 
 //Sensor
-#define INFRARED 33
+#define INFRARED 25
 
 //Start 
-#define START 25 
+#define START 33
 
 //Tower
 #define DirTower 26
@@ -30,6 +33,12 @@
 //Plate
 #define DirPlate 13
 #define StepPlate 14
+
+int Delay = 700;
+int stepsPlate = 0;
+int stepsTower = 0;
+unsigned long previous = 0;
+bool stepState = false;
 
 bool start = 0;
 
@@ -105,7 +114,8 @@ void loop() {
   if(start == 1){
     displayAnimation();
     moveMotors();
-    senseDistance();
+    Serial.println(senseDistance());
+    //writeFile();
     if(digitalRead(STOPHIGH) == HIGH){
       start = 0;
       displayFinishTitle();
@@ -117,12 +127,54 @@ void loop() {
 }
 
 void moveMotors(){
+  unsigned long current = micros();
+  switch(state) {
+    case MOVING_PLATE:
+      if (stepsPlate < 3200) {
+        if (current - previous >= Delay) {
+          previous = current;
+          digitalWrite(stepPlate, stepState ? LOW : HIGH);
+          stepState = !stepState;
+          if (!stepState) stepsPlate++; 
+        }
+      } else {
+        stepsPlate = 0;
+        state = MOVING_TOWER;
+        stepState = false;
+        digitalWrite(stepPlate, LOW); 
+      }
+      break;
 
-
+    case MOVING_TOWER:
+      if (stepsTower < 800) {
+        if (current - previous >= Delay) {
+          previous = current;
+          digitalWrite(stepTower, stepState ? LOW : HIGH);
+          stepState = !stepState;
+          if (!stepState) stepsTower++; 
+        }
+      } else {
+        stepsTower = 0;
+        state = MOVING_PLATE;
+        stepState = false;
+        digitalWrite(stepTower, LOW); 
+      }
+      break;
+  }
 }
 
-void senseDistance(){
+float senseDistance() {
+  int data = analogRead(INFRARED);
+  float voltage = data * (3.3 / 4095.0);
+  float distance = 27.86 * pow(voltage, -1.15);
 
+  // Limita los valores de distancia para no tener puntos en sitios que no correspondan
+  if (distance > 30.0) {
+    distance = 31.0; //debug
+  } else if (distance < 7.0) {
+    distance = 1.0; //debug
+  }
+  return distance;
 }
 
 void displayAnimation(){
@@ -158,4 +210,17 @@ void displayFinishTitle(){ //Será cambiado por una animacion de terminado --Ole
 
 void motorDown(){
 
+
+}
+
+void writeFile(float distance, float height, float angle){
+  if(distance == 1.0 or distance == 31.0){   
+
+  }else{
+    Serial.print(distance);
+    Serial.print(",");
+    Serial.print(height);
+    Serial.print(",");
+    Serial.println(angle);
+  }
 }
